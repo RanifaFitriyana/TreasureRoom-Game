@@ -1,8 +1,56 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
+    [Header("Exit Panel")]
     public GameObject exitPanel;
+
+    [Header("Menu Panels")]
+    public GameObject mainMenuPanel;
+    public GameObject levelSelectPanel;
+
+    void Start()
+    {
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(true);
+
+        if (levelSelectPanel != null)
+            levelSelectPanel.SetActive(false);
+
+        if (exitPanel != null)
+            exitPanel.SetActive(false);
+    }
+
+    // =====================
+    // LEVEL SELECT
+    // =====================
+
+    public void OpenLevelSelect()
+    {
+        mainMenuPanel.SetActive(false);
+        levelSelectPanel.SetActive(true);
+    }
+
+    public void BackToMainMenu()
+    {
+        levelSelectPanel.SetActive(false);
+        mainMenuPanel.SetActive(true);
+    }
+
+    public void LoadLevel1()
+    {
+        SceneManager.LoadScene("Level1");
+    }
+
+    public void LoadLevel2()
+    {
+        SceneManager.LoadScene("Level2");
+    }
+
+    // =====================
+    // EXIT GAME
+    // =====================
 
     public void ShowExitConfirmation()
     {
