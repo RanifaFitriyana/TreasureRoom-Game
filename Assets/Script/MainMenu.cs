@@ -12,11 +12,26 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
-        if (mainMenuPanel != null)
-            mainMenuPanel.SetActive(true);
+        // Jika datang dari game setelah menang
+        if (PlayerPrefs.GetInt("OpenLevelPanel", 0) == 1)
+        {
+            if (mainMenuPanel != null)
+                mainMenuPanel.SetActive(false);
 
-        if (levelSelectPanel != null)
-            levelSelectPanel.SetActive(false);
+            if (levelSelectPanel != null)
+                levelSelectPanel.SetActive(true);
+
+            // Reset flag
+            PlayerPrefs.SetInt("OpenLevelPanel", 0);
+        }
+        else
+        {
+            if (mainMenuPanel != null)
+                mainMenuPanel.SetActive(true);
+
+            if (levelSelectPanel != null)
+                levelSelectPanel.SetActive(false);
+        }
 
         if (exitPanel != null)
             exitPanel.SetActive(false);

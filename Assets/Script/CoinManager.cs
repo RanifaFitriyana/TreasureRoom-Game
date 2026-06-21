@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class CoinManager : MonoBehaviour
 {
@@ -9,49 +10,89 @@ public class CoinManager : MonoBehaviour
     public TextMeshProUGUI coinText;
     public TextMeshProUGUI timerText;
 
-    public GameObject winText;
-    public GameObject gameOverText;
+    [Header("Win Result")]
+    public TextMeshProUGUI coinResultText;
+    public TextMeshProUGUI timeResultText;
+
+    [Header("Tutorial")]
+    public GameObject tutorialPanel;
+    private bool gameStarted = false;
+
+    [Header("Panels")]
+    public GameObject winPanel;
+    public GameObject gameOverPanel;
+    public GameObject pausePanel;
+
+    [Header("Player")]
+    public FirstPersonController playerController;
 
     [Header("Coin")]
-    private int coinCount = 0;
     public int totalCoin = 5;
+    private int currentCoin = 0;
 
     [Header("Timer")]
-    public float timeRemaining = 60f;
+    public float startTime = 60f;
+    private float currentTime;
 
     private bool gameEnded = false;
+    private bool isPaused = false;
 
     private void Awake()
     {
-        instance = this;
+        if (instance == null)
+            instance = this;
+        else
+            Destroy(gameObject);
     }
 
     private void Start()
     {
+        currentTime = startTime;
+
+        gameStarted = false;
+
+        Time.timeScale = 0;
+
+        tutorialPanel.SetActive(true);
+
+        if (winPanel != null)
+            winPanel.SetActive(false);
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
         UpdateUI();
 
-        winText.SetActive(false);
-        gameOverText.SetActive(false);
+        playerController.UnlockCursor();
+    }
+
+    public void StartGame()
+    {
+        gameStarted = true;
+
+        Time.timeScale = 1;
+
+        tutorialPanel.SetActive(false);
+
+        playerController.LockCursor();
     }
 
     private void Update()
     {
-        if (gameEnded)
+        if (gameEnded || isPaused || !gameStarted)
             return;
 
-        HandleTimer();
-    }
+        currentTime -= Time.deltaTime;
 
-    void HandleTimer()
-    {
-        timeRemaining -= Time.deltaTime;
+        currentTime = Mathf.Clamp(currentTime, 0, startTime);
 
-        timeRemaining = Mathf.Clamp(timeRemaining, 0, 999);
+        if (timerText != null)
+            timerText.text = Mathf.CeilToInt(currentTime).ToString();
 
-        timerText.text = "Time : " + Mathf.Ceil(timeRemaining);
-
-        // GAME OVER
-        if (timeRemaining <= 0)
+        if (currentTime <= 0)
         {
             GameOver();
         }
@@ -62,37 +103,122 @@ public class CoinManager : MonoBehaviour
         if (gameEnded)
             return;
 
-        coinCount++;
+        currentCoin++;
 
         UpdateUI();
 
-        // YOU WIN
-        if (coinCount >= totalCoin)
+        if (currentCoin >= totalCoin)
         {
-            YouWin();
+            WinGame();
         }
     }
 
-    void UpdateUI()
+    private void UpdateUI()
     {
-        coinText.text = "Coin : " + coinCount + " / " + totalCoin;
+        if (coinText != null)
+            coinText.text = currentCoin + " / " + totalCoin;
     }
 
-    void YouWin()
+    private void WinGame()
     {
         gameEnded = true;
 
-        winText.SetActive(true);
+        // Hitung waktu yang dipakai
+        float usedTime = startTime - currentTime;
+
+        int minutes = Mathf.FloorToInt(usedTime / 60);
+        int seconds = Mathf.FloorToInt(usedTime % 60);
+
+        // Tampilkan hasil pada panel win
+        if (coinResultText != null)
+            coinResultText.text = "Coin : " + currentCoin + " / " + totalCoin;
+
+        if (timeResultText != null)
+            timeResultText.text = "Time : " + minutes.ToString("00") + ":" + seconds.ToString("00");
+
+        Time.timeScale = 0;
+
+        if (playerController != null)
+            playerController.UnlockCursor();
+
+        if (winPanel != null)
+            winPanel.SetActive(true);
 
         Debug.Log("YOU WIN");
     }
 
-    void GameOver()
+    private void GameOver()
     {
         gameEnded = true;
 
-        gameOverText.SetActive(true);
+        Time.timeScale = 0;
+
+        if (playerController != null)
+            playerController.UnlockCursor();
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
 
         Debug.Log("GAME OVER");
+    }
+
+    // ========================
+    // BUTTON FUNCTIONS
+    // ========================
+
+    public void PauseGame()
+    {
+        if (gameEnded || isPaused)
+            return;
+
+        isPaused = true;
+
+        Time.timeScale = 0;
+
+        if (playerController != null)
+            playerController.UnlockCursor();
+
+        if (pausePanel != null)
+            pausePanel.SetActive(true);
+    }
+
+    public void ResumeGame()
+    {
+        if (!isPaused)
+            return;
+
+        isPaused = false;
+
+        Time.timeScale = 1;
+
+        if (playerController != null)
+            playerController.LockCursor();
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+    }
+
+    public void RestartLevel()
+    {
+        Time.timeScale = 1;
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void GoToMainMenu()
+    {
+        Time.timeScale = 1;
+
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    public void GoToLevelPanel()
+    {
+        Time.timeScale = 1;
+
+        // Tandai bahwa MainMenu harus membuka LevelSelectPanel
+        PlayerPrefs.SetInt("OpenLevelPanel", 1);
+
+        SceneManager.LoadScene("MainMenu");
     }
 }

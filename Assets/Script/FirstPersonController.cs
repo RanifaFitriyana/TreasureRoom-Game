@@ -23,26 +23,44 @@ public class FirstPersonController : MonoBehaviour
 
     private Vector3 currentMovement;
     private float verticalRotation;
-    private float CurrentSpeed => walkSpeed * (playerInputHandler.SprintTriggered ? sprintMultiplier : 1);
 
-    // Start is called before the first frame update
+    private float CurrentSpeed =>
+        walkSpeed * (playerInputHandler.SprintTriggered ? sprintMultiplier : 1);
+
     void Start()
+    {
+        LockCursor();
+    }
+
+    void Update()
+    {
+        // Stop player saat pause
+        if (Time.timeScale == 0)
+            return;
+
+        HandleMovement();
+        HandleRotation();
+    }
+
+    public void LockCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void UnlockCursor()
     {
-        HandleMovement();
-        HandleRotation();
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     private Vector3 CalculateWorldDirection()
     {
-        Vector3 inputDirection = new Vector3(playerInputHandler.MovementInput.x, 0f, playerInputHandler.MovementInput.y);
+        Vector3 inputDirection =
+            new Vector3(playerInputHandler.MovementInput.x, 0f, playerInputHandler.MovementInput.y);
+
         Vector3 worldDirection = transform.TransformDirection(inputDirection);
+
         return worldDirection.normalized;
     }
 
@@ -66,10 +84,12 @@ public class FirstPersonController : MonoBehaviour
     private void HandleMovement()
     {
         Vector3 worldDirection = CalculateWorldDirection();
+
         currentMovement.x = worldDirection.x * CurrentSpeed;
         currentMovement.z = worldDirection.z * CurrentSpeed;
 
         HandleJumping();
+
         characterController.Move(currentMovement * Time.deltaTime);
     }
 
@@ -80,14 +100,22 @@ public class FirstPersonController : MonoBehaviour
 
     private void ApplyVerticalRotation(float rotationAmount)
     {
-        verticalRotation = Mathf.Clamp(verticalRotation - rotationAmount, -upDownLookRange, upDownLookRange);
-        mainCamera.transform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
+        verticalRotation = Mathf.Clamp(
+            verticalRotation - rotationAmount,
+            -upDownLookRange,
+            upDownLookRange);
+
+        mainCamera.transform.localRotation =
+            Quaternion.Euler(verticalRotation, 0, 0);
     }
 
     private void HandleRotation()
     {
-        float mouseXRotation = playerInputHandler.RotationInput.x * mouseSensitivity;
-        float mouseYRotation = playerInputHandler.RotationInput.y * mouseSensitivity;
+        float mouseXRotation =
+            playerInputHandler.RotationInput.x * mouseSensitivity;
+
+        float mouseYRotation =
+            playerInputHandler.RotationInput.y * mouseSensitivity;
 
         ApplyHorizontalRotation(mouseXRotation);
         ApplyVerticalRotation(mouseYRotation);
