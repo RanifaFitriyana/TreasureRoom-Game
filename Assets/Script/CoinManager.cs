@@ -47,13 +47,23 @@ public class CoinManager : MonoBehaviour
 
     private void Start()
     {
-        currentTime = startTime;
+        // =========================
+        // PLAY GAMEPLAY MUSIC
+        // =========================
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.PlayGameplayMusic();
+        }
 
+        currentTime = startTime;
         gameStarted = false;
+        gameEnded = false;
+        isPaused = false;
 
         Time.timeScale = 0;
 
-        tutorialPanel.SetActive(true);
+        if (tutorialPanel != null)
+            tutorialPanel.SetActive(true);
 
         if (winPanel != null)
             winPanel.SetActive(false);
@@ -66,7 +76,8 @@ public class CoinManager : MonoBehaviour
 
         UpdateUI();
 
-        playerController.UnlockCursor();
+        if (playerController != null)
+            playerController.UnlockCursor();
     }
 
     public void StartGame()
@@ -75,9 +86,11 @@ public class CoinManager : MonoBehaviour
 
         Time.timeScale = 1;
 
-        tutorialPanel.SetActive(false);
+        if (tutorialPanel != null)
+            tutorialPanel.SetActive(false);
 
-        playerController.LockCursor();
+        if (playerController != null)
+            playerController.LockCursor();
     }
 
     private void Update()
@@ -86,7 +99,6 @@ public class CoinManager : MonoBehaviour
             return;
 
         currentTime -= Time.deltaTime;
-
         currentTime = Mathf.Clamp(currentTime, 0, startTime);
 
         if (timerText != null)
@@ -123,13 +135,11 @@ public class CoinManager : MonoBehaviour
     {
         gameEnded = true;
 
-        // Hitung waktu yang dipakai
         float usedTime = startTime - currentTime;
 
         int minutes = Mathf.FloorToInt(usedTime / 60);
         int seconds = Mathf.FloorToInt(usedTime % 60);
 
-        // Tampilkan hasil pada panel win
         if (coinResultText != null)
             coinResultText.text = "Coin : " + currentCoin + " / " + totalCoin;
 
@@ -201,14 +211,12 @@ public class CoinManager : MonoBehaviour
     public void RestartLevel()
     {
         Time.timeScale = 1;
-
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void GoToMainMenu()
     {
         Time.timeScale = 1;
-
         SceneManager.LoadScene("MainMenu");
     }
 
@@ -216,7 +224,7 @@ public class CoinManager : MonoBehaviour
     {
         Time.timeScale = 1;
 
-        // Tandai bahwa MainMenu harus membuka LevelSelectPanel
+        // Membuka panel level saat kembali ke Main Menu
         PlayerPrefs.SetInt("OpenLevelPanel", 1);
 
         SceneManager.LoadScene("MainMenu");
